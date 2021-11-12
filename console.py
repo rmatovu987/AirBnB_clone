@@ -35,6 +35,36 @@ class HBNBCommand(cmd.Cmd):
         """Execute nothing"""
         pass
 
+    def default(self, line):
+        """ Method used to “intercept” STDOUT"""
+        methods = {
+            "all": self.do_all,
+            "show": self.do_show,
+            "destroy": self.do_destroy,
+            "count": self.__count,
+            "update": self.do_update
+            }
+        i = line.split(".")
+        _class = i[0]
+        i_finder = i[1].split("(")
+        method = i_finder[0]
+        attr = i_finder[1].replace(')', "").replace('"', "")
+        id_finder = attr.split(", ")
+        idclass_ = id_finder[0]
+        if _class in self.class_list and method in methods:
+            if method == "all" or method == "count":
+                methods[method](_class)
+            elif method == "update":
+                attr = attr.split(", ")
+                attr_name = attr[1]
+                attr_value = attr[2]
+                methods[method]("{} {} {} {}".format(_class,
+                                idclass_, attr_name, attr_value))
+            else:
+                methods[method]("{} {}".format(_class, idclass_))
+        else:
+            cmd.Cmd.default(self, line)
+
     def do_create(self, line):
         """Creates a new instance of BaseModel, saves it
         (to the JSON file) and prints the id. Ex: $ create BaseModel"""
@@ -128,6 +158,14 @@ class HBNBCommand(cmd.Cmd):
         else:
             setattr(data[key], i[2], i[3])
             storage.save()
+
+    def __count(self, line):
+        """ Retrieve the number of instances of a class """
+        count = 0
+        for key, value in storage.all().items():
+            if value.__class__.__name__ == line:
+                count += 1
+        print(count)
 
 
 if __name__ == '__main__':
