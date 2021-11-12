@@ -3,3 +3,5 @@
 test_base_model*
 test_save_reload_*
 file.json
+/.idea
+/.vscode
