@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Entry point of the command interpreter"""
 import cmd
+import json
 import shlex
 
 from models import storage
@@ -157,6 +158,28 @@ class HBNBCommand(cmd.Cmd):
         else:
             setattr(data[key], i[2], i[3])
             storage.save()
+
+    def update_dict(self, classname, uid, s_dict):
+        """Helper method for update() with a dictionary."""
+        s = s_dict.replace("'", '"')
+        d = json.loads(s)
+        if not classname:
+            print("** class name missing **")
+        elif classname not in self.class_list:
+            print("** class doesn't exist **")
+        elif uid is None:
+            print("** instance id missing **")
+        else:
+            key = "{}.{}".format(classname, uid)
+            if key not in storage.all():
+                print("** no instance found **")
+            else:
+                attributes = storage.attributes()[classname]
+                for attribute, value in d.items():
+                    if attribute in attributes:
+                        value = attributes[attribute](value)
+                    setattr(storage.all()[key], attribute, value)
+                storage.all()[key].save()
 
     def __count(self, line):
         """ Retrieve the number of instances of a class """
