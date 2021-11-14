@@ -7,5 +7,3 @@ class Amenity(BaseModel):
     """Amenity Class"""
 
     name = ""
-
-

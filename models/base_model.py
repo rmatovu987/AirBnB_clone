@@ -36,7 +36,7 @@ class BaseModel:
     def __str__(self):
         """Return a human readable string"""
         return "[{}] ({}) {}".format(self.__class__.__name__,
-                                    self.id, self.__dict__)
+                                     self.id, self.__dict__)
 
     def save(self):
         """Updates instance of updated_at with current datetime"""
