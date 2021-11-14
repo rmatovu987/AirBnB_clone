@@ -135,32 +135,47 @@ class HBNBCommand(cmd.Cmd):
                     list_obj.append(data[key].__str__())
             print(list_obj)
 
-    def do_update(self, line):
+    def do_update(self, arg):
         """Update an instance based on class name"""
-        i = shlex.split(line)
-        if not line:
+        args_list = shlex.split(arg)
+        new_dict = storage.all()  # This is a dict of instances.
+        # list[0] = classname
+        # list[1] = id
+        # list[2] = attribute name
+        # list[3] = "atribute value"
+        if len(args_list) < 1:
             print("** class name missing **")
-            return
-        elif i[0] not in self.class_list:
+        # Check if the class name doesn’t exist
+        elif args_list[0] not in self.class_list:
             print("** class doesn't exist **")
-            return
-        elif len(i) == 1:
+        # Check if the id is given as a parameter
+        elif len(args_list) < 2:
             print("** instance id missing **")
-            return
-        data = storage.all()
-        key = i[0] + "." + i[1]
-        if key not in data:
-            print("** no instance found **")
-        elif len(i) == 2:
-            print("** attribute name missing **")
-        elif len(i) == 3:
-            if type(eval(i[2])) != dict:
-                print("** value missing **")
-            setattr(data[key], i[2], i[3])
-            storage.save()
         else:
-            setattr(data[key], i[2], i[3])
-            storage.save()
+            new_key = args_list[0] + '.' + args_list[1]  # This is the key
+            if new_key not in new_dict.keys():
+                print("** no instance found **")
+            elif len(args_list) < 3:
+                print("** attribute name missing **")
+            elif len(args_list) < 4:
+                print("** value missing **")
+            else:
+                # Get the instance
+                instance = new_dict[new_key]
+                # Get the attribute to update from that instance
+                try:
+                    # Get the type of the attribute
+                    # Cast the attribute value to corresponding type
+                    up_attr = getattr(instance, args_list[2])
+                    attr_type = type(up_attr)
+                    casted_val = eval('attr_type' + '(' + args_list[3] + ')')
+                    setattr(instance, args_list[2], casted_val)
+                except Exception:
+                    # If attribute does not exist, save value to set.
+                    setattr(instance, args_list[2], args_list[3])
+                # Set attribute with new value
+                # Save changes to JSON file
+                storage.save()
 
     def __count(self, line):
         """ Retrieve the number of instances of a class """
