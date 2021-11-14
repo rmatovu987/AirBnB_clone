@@ -135,29 +135,29 @@ class HBNBCommand(cmd.Cmd):
                     list_obj.append(data[key].__str__())
             print(list_obj)
 
-    def do_update(self, line):
+    def do_update(self, arg):
         """Update an instance based on class name"""
-        i = shlex.split(line)
-        if not line:
+        objs = storage.all()
+        args = arg.split()
+        if len(args) == 0:
             print("** class name missing **")
-            return
-        elif i[0] not in self.class_list:
+        elif args[0] not in self.class_list:
             print("** class doesn't exist **")
-            return
-        elif len(i) == 1:
+        elif len(args) == 1:
             print("** instance id missing **")
-            return
-        data = storage.all()
-        key = i[0] + "." + i[1]
-        if key not in data:
+        elif "{}.{}".format(args[0], args[1]) not in objs.keys():
             print("** no instance found **")
-        elif len(i) == 2:
+        elif len(args) == 2:
             print("** attribute name missing **")
-        elif len(i) == 3:
-            print("** value missing **")
-        else:
-            setattr(data[key], i[2], i[3])
-            storage.save()
+        elif len(args) == 3:
+            try:
+                type(eval(args[2])) != dict
+            except NameError:
+                print("** value missing **")
+        elif len(args) == 4:
+            obj = objs["{}.{}".format(args[0], args[1])]
+            obj.__dict__.update({args[2]: args[3]})
+            obj.save()
 
     def __count(self, line):
         """ Retrieve the number of instances of a class """
