@@ -135,42 +135,29 @@ class HBNBCommand(cmd.Cmd):
                     list_obj.append(data[key].__str__())
             print(list_obj)
 
-    def do_update(self, arg):
-        """update instance"""
-        if arg == "":
+    def do_update(self, line):
+        """Update an instance based on class name"""
+        i = shlex.split(line)
+        if not line:
             print("** class name missing **")
             return
-        args = shlex.split(arg)
-        if args[0] not in self.classes:
+        elif i[0] not in self.class_list:
             print("** class doesn't exist **")
-        elif len(args) == 1:
+            return
+        elif len(i) == 1:
             print("** instance id missing **")
+            return
+        data = storage.all()
+        key = i[0] + "." + i[1]
+        if key not in data:
+            print("** no instance found **")
+        elif len(i) == 2:
+            print("** attribute name missing **")
+        elif len(i) == 3:
+            print("** value missing **")
         else:
-            flag = 0
-            idn = "[{}] ({})".format(args[0], args[1])
-            for ins in self.ins:
-                if idn in ins.__str__():
-                    flag = 1
-            if flag == 0:
-                print("** no instance found **")
-            elif len(args) == 2:
-                print("** attribute name missing **")
-            elif len(args) == 3:
-                print("** value missing **")
-            else:
-                idn = "[{}] ({})".format(args[0], args[1])
-                for ins in self.ins:
-                    if idn in ins.__str__():
-                        try:
-                            val = int(args[3])
-                        except ValueError:
-                            try:
-                                val = float(args[3])
-                            except ValueError:
-                                val = args[3]
-
-                        setattr(ins, args[2], val)
-                        ins.save()
+            setattr(data[key], i[2], i[3])
+            storage.save()
 
     def __count(self, line):
         """ Retrieve the number of instances of a class """
