@@ -154,9 +154,7 @@ class HBNBCommand(cmd.Cmd):
         elif len(i) == 2:
             print("** attribute name missing **")
         elif len(i) == 3:
-            try:
-                type(eval(i[2])) != dict
-            except NameError:
+            if type(eval(i[2])) != dict:
                 print("** value missing **")
         else:
             setattr(data[key], i[2], i[3])
