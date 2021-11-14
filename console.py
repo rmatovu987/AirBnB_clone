@@ -156,6 +156,8 @@ class HBNBCommand(cmd.Cmd):
         elif len(i) == 3:
             if type(eval(i[2])) != dict:
                 print("** value missing **")
+            setattr(data[key], i[2], i[3])
+            storage.save()
         else:
             setattr(data[key], i[2], i[3])
             storage.save()
