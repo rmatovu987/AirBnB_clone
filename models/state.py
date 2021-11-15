@@ -10,4 +10,3 @@ class State(BaseModel):
     def __init__(self, *args, **kwargs):
         """Commom definition for all models"""
         super().__init__(*args, **kwargs)
-        
