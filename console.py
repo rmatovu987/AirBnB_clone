@@ -19,6 +19,12 @@ class HBNBCommand(cmd.Cmd):
 
     class_list = ["BaseModel", "User", "Amenity", "City",
                   "Place", "Review", "State"]
+    types = {
+             'number_rooms': int, 'number_bathrooms': int,
+             'max_guest': int, 'price_by_night': int,
+             'latitude': float, 'longitude': float
+            }
+
     prompt = "(hbnb) "
 
     @staticmethod
@@ -135,47 +141,88 @@ class HBNBCommand(cmd.Cmd):
                     list_obj.append(data[key].__str__())
             print(list_obj)
 
-    def do_update(self, arg):
-        """Update an instance based on class name"""
-        args_list = shlex.split(arg)
-        new_dict = storage.all()  # This is a dict of instances.
-        # list[0] = classname
-        # list[1] = id
-        # list[2] = attribute name
-        # list[3] = "atribute value"
-        if len(args_list) < 1:
+    def do_update(self, args):
+        """ Updates a certain object with new info """
+        c_name = c_id = att_name = att_val = kwargs = ''
+
+        # isolate cls from id/args, ex: (<cls>, delim, <id/args>)
+        args = args.partition(" ")
+        if args[0]:
+            c_name = args[0]
+        else:  # class name not present
             print("** class name missing **")
-        # Check if the class name doesn’t exist
-        elif args_list[0] not in self.class_list:
+            return
+        if c_name not in self.class_list:  # class name invalid
             print("** class doesn't exist **")
-        # Check if the id is given as a parameter
-        elif len(args_list) < 2:
+            return
+
+        # isolate id from args
+        args = args[2].partition(" ")
+        if args[0]:
+            c_id = args[0]
+        else:  # id not present
             print("** instance id missing **")
-        else:
-            new_key = args_list[0] + '.' + args_list[1]  # This is the key
-            if new_key not in new_dict.keys():
-                print("** no instance found **")
-            elif len(args_list) < 3:
-                print("** attribute name missing **")
-            elif len(args_list) < 4:
-                print("** value missing **")
-            else:
-                # Get the instance
-                instance = new_dict[new_key]
-                # Get the attribute to update from that instance
-                try:
-                    # Get the type of the attribute
-                    # Cast the attribute value to corresponding type
-                    up_attr = getattr(instance, args_list[2])
-                    attr_type = type(up_attr)
-                    casted_val = eval('attr_type' + '(' + args_list[3] + ')')
-                    setattr(instance, args_list[2], casted_val)
-                except Exception:
-                    # If attribute does not exist, save value to set.
-                    setattr(instance, args_list[2], args_list[3])
-                # Set attribute with new value
-                # Save changes to JSON file
-                storage.save()
+            return
+
+        # generate key from class and id
+        key = c_name + "." + c_id
+
+        # determine if key is present
+        if key not in storage.all():
+            print("** no instance found **")
+            return
+
+        # first determine if kwargs or args
+        if '{' in args[2] and '}' in args[2] and type(eval(args[2])) is dict:
+            kwargs = eval(args[2])
+            args = []  # reformat kwargs into list, ex: [<name>, <value>, ...]
+            for k, v in kwargs.items():
+                args.append(k)
+                args.append(v)
+        else:  # isolate args
+            args = args[2]
+            if args and args[0] == '\"':  # check for quoted arg
+                second_quote = args.find('\"', 1)
+                att_name = args[1:second_quote]
+                args = args[second_quote + 1:]
+
+            args = args.partition(' ')
+
+            # if att_name was not quoted arg
+            if not att_name and args[0] != ' ':
+                att_name = args[0]
+            # check for quoted val arg
+            if args[2] and args[2][0] == '\"':
+                att_val = args[2][1:args[2].find('\"', 1)]
+
+            # if att_val was not quoted arg
+            if not att_val and args[2]:
+                att_val = args[2].partition(' ')[0]
+
+            args = [att_name, att_val]
+
+        # retrieve dictionary of current objects
+        new_dict = storage.all()[key]
+
+        # iterate through attr names and values
+        for i, att_name in enumerate(args):
+            # block only runs on even iterations
+            if (i % 2 == 0):
+                att_val = args[i + 1]  # following item is value
+                if not att_name:  # check for att_name
+                    print("** attribute name missing **")
+                    return
+                if not att_val:  # check for att_value
+                    print("** value missing **")
+                    return
+                # type cast as necessary
+                if att_name in self.types:
+                    att_val = self.types[att_name](att_val)
+
+                # update dictionary with name, value pair
+                new_dict.__dict__.update({att_name: att_val})
+
+        new_dict.save()  # save updates to file
 
     def __count(self, line):
         """ Retrieve the number of instances of a class """
